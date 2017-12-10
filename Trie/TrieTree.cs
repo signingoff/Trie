@@ -1,79 +1,91 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 
 namespace Trie
 {
-    public class TrieTree
+    public class TrieTree : TrieNode
     {
-        public IList<TrieNode> Nodes { get; private set; } = new List<TrieNode>();
+        public TrieTree()
+        { }
 
-        public void AddNodes(string word)
+        private TrieTree(char c) : base(c)
         {
-            if (string.IsNullOrEmpty(word)) return;
-            int i = 0, depth = 0;
-            AddNodeCore(this.Nodes, word, ref i, ref depth);
         }
 
-        public string FindPrefix(string word)
+        public TrieNode AddNodes(string word)
         {
-            return string.Empty;
+            if (string.IsNullOrEmpty(word)) return null;
+            int i = 0;
+            TrieNode node = null;
+            TrieNode paretNode = this;
+            while (i < word.Length)
+            {
+                int index = GetIndex(word[i]);
+                node = paretNode.Nodes[index];
+                if (node == null)
+                {
+                    node = new TrieNode(word[i] < 91 ? (char)(word[i] + 32) : word[i]);
+                    paretNode.Nodes[index] = node;
+                }
+                paretNode = node;
+                i = i + 1;
+            }
+            node.Frequence = node.Frequence + 1;
+            return node;
+        }
+
+        private int GetIndex(char c)
+        {
+            if (c < 91)
+                return c - 65;
+            else
+                return c - 97;
+        }
+
+        public TrieNode Search(string word)
+        {
+            if (string.IsNullOrEmpty(word)) return null;
+            int i = 0;
+            TrieNode paretNode = this;
+            while (i < word.Length)
+            {
+                int index = GetIndex(word[i]);
+                paretNode = paretNode.Nodes[index];
+                i = i + 1;
+            }
+            return paretNode;
         }
 
         public IList<TrieNode> GetDesendantNodes()
         {
-            if (this.Nodes.Count == 0) return this.Nodes;
-
             IList<TrieNode> nodes = new List<TrieNode>();
             int i = 0;
-            while (i < this.Nodes.Count)
+            while (i < this.Nodes.Length)
             {
                 TrieNode node = this.Nodes[i];
+                if (node == null)
+                {
+                    i = i + 1;
+                    continue;
+                }
+
                 nodes.Add(node);
                 GetDesendantNodesCore(node, nodes);
                 i = i + 1;
             }
             return nodes;
         }
-        
-        private static void AddNodeCore(IList<TrieNode> nodes, string word, ref int i, ref int depth)
-        {
-            int currentIndex = i;
-            TrieNode node = nodes.FirstOrDefault(n => n.Character == word[currentIndex]);
-            if (node == null)
-            {
-                node = new TrieNode(word[i]);
-                node.Depth = depth;
-                depth = depth + 1;
-                nodes.Add(node);
-                Add(node, word, ref i, ref depth);
-            }
-            else
-            {
-                depth = depth + 1;
-                Add(node, word, ref i, ref depth);
-            }
-        }
-
-        private static void Add(TrieNode node, string word, ref int i, ref int depth)
-        {
-            if (i + 1 < word.Length)
-            {
-                i = i + 1;
-                node.IsComplete = false;
-                AddNodeCore(node.Nodes, word, ref i, ref depth);
-            }
-            else
-            {
-                node.IsComplete = true;
-            }
-        }
 
         private static void GetDesendantNodesCore(TrieNode parent, IList<TrieNode> nodes)
         {
             int i = 0;
-            while (i < parent.Nodes.Count)
+            while (i < parent.Nodes.Length)
             {
                 TrieNode node = parent.Nodes[i];
+                if (node == null)
+                {
+                    i = i + 1;
+                    continue;
+                }
                 nodes.Add(node);
                 GetDesendantNodesCore(node, nodes);
                 i = i + 1;
